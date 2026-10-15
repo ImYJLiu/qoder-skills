@@ -17,10 +17,14 @@ Create / update issues in the internal Jira `https://jira.gmarket.com`, project 
 ## Conventions
 
 - Reporter account: Luna (`ddcm41`).
-- Default assignee for IM seller/app/web issues: Bruce (`ddcm57`). Do NOT default to `hyunlee` (이현성) — AIDC domain/session contact.
-- Language: title AND description section-by-section in **Chinese + English** (rule from 2026-10-09; the older EN+KR rule is void).
-- Style: short and direct. One line when one line is enough. No long multi-section essays.
+- Default assignee for IM seller/app/web issues: Bruce (`ddcm57`). Do NOT default to `hyunlee` (이현성) — AIDC domain/session contact. Others seen: Runyon (`lzd2572`) for 부재중/absence logic; Paul (`ddcm45`) for server/AIDC.
+- Language (updated 2026-10-15): follow the language the user asks for THAT ticket. Default = **Chinese + English**; Korean-facing tickets (e.g. GEMINI-4301) = **Korean + English**. **EVERY section must carry its translation, not just the title** — the user audits and will ask 「英文去哪里了？」. (The 10-09 blanket CN+EN rule is now "per-ticket instruction, each section translated".)
+- Style: short and direct. One line when one line is enough. No long multi-section essays. Users WILL demand trimming (「太TM罗嗦了，精简一下」) — write it short the first time.
 - IM issue title prefix: `[IM/Seller/App|Web]` or `[IM/Buyer/SDK]` + bilingual title.
+- Description shape (2026-10-15, worked well): compact `h3` blocks — `h3. 환경 / Environment` → `h3. 문제 / Problem` → `h3. 재현 / Steps`, target ~600–1500 chars total. Put the repro accounts AND passwords (seller + buyer) in the environment block for STG tickets; paste raw responses (open.chat.page, OCP, frames) in `{code}` blocks.
+- Links: paste FULL PDP URLs (`https://item-stg.gmarket.co.kr/Item?goodsCode=…`), not bare item IDs. Verify the URL form before putting it in the ticket.
+- Screenshot-based sightings: do NOT interact with the scene; note 「现场未做任何操作，以截图为准」 in the description.
+- Dedup first: JQL-search the itemId / keywords before creating. Link related tickets with a short comment (e.g. GEMINI-4290 ↔ 4242「已于 10-12 Done」).
 - **STG 环境的单 / STG environment tickets（2026-10-13）**: 标题最前加 `【STG】` 前缀（例：`【STG】[IM/Buyer/Web] …`）；labels 必须包含 `STG`；Component 必须包含 `100. IM Core Function (Section 1)`（30978）。
 - **Epic Link 必挂（2026-10-13 定，否则单不会出现在团队 Kanban 上）**：新建 IM / 聊天平台相关单时，必须设 Epic Link = `GEMINI-2453`（Epic Name「[G][ESM] 채팅 플랫폼 구축 Ph1_Gemini」＝「聊天平台构建 Ph1_Gemini」）。非聊天模块的单（如纯 ESM+ 登录会话类）另议。
   - Epic 搜索坑：该 epic 的 summary 显示为「…Ph1 QA」，且 JQL 按 `"Gemini"` / `"Ph1"` 都搜不到它（"Ph1_Gemini" 被分词成单个 token）。要搜用 `issuetype = Epic AND "Epic Name" ~ "Ph1*"`，或直接用单号 **2453**。
