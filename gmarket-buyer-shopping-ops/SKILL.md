@@ -18,6 +18,15 @@ Shopping operations with a shared test buyer (`lunaliu*` / `gembuyN`) on STG pag
 - Order history: `https://my-av.gmarket.co.kr/ko/pc/list/all`.
 - Session oracle: `https://my-av.gmarket.co.kr/ko/pc/main` (header 로그인/로그아웃).
 
+### Dev environment (gembuyN accounts)
+
+`gembuyN` buyers live in **dev**, not STG (custNos 5xxxxx, e.g. gembuy36=500000137, header 닉네임 알인증36). Same flows, different domains (verified end-to-end 2026-10-19):
+
+- PDP `https://item-dev.gmarket.co.kr/Item?goodsCode=<n>`; Cart `https://cart-dev.gmarket.co.kr/ko/cart` (count 「상품수 N개」); Wishlist `https://diary2-dev.gmarket.co.kr/Favorite/MyFavoriteItems`; login `https://login-dev.gmarket.co.kr/login/login?type=MEMBER&url=…` (fill `#typeMemberInputId`/`#typeMemberInputPassword`, `login.checkValid()`, set `#loginForm` action to `/login/loginProc`, submit; a `login/password-notice` page may follow — just navigate to the target).
+- `AddFavoriteItem` and the `button.btn_mycart` cart flow work identically on `item-dev`. No checkout walkthrough verified on dev yet.
+- Seller-ID search does NOT work on dev (`/n/search?keyword=gemsell17` = 0 results; `/minishop/<sellerId>` is a dead route). Get goodscodes from prior chat `itemId`s or PDP HTML (`"SellerId"`/`"SellerCustNo"`), or ask the user.
+- gemsell17 (dev custNo 500000149) test items: `8003641205`–`8003641209` = Test Product 1–5, `8000120424` (Motorheadphones Trigger, 31,000원), `8000051605`. Note `8003641212` (Test Product 8) belongs to gemselluna.
+
 ## Wishlist (찜 / 心愿单)
 
 1. Batch add from any `item-stg` PDP (same-origin, no CSRF/signature needed):
@@ -39,7 +48,7 @@ Shopping operations with a shared test buyer (`lunaliu*` / `gembuyN`) on STG pag
 - 품절 items show NO visible cart button (`no visible btn`) — not addable. 판매종료 rows may sit in the cart but render 「판매 종료되어 주문할 수 없습니다」 and are excluded from checkout totals.
 - Old test items may already be in the cart — leave them; only 판매종료/품절 rows are inert. The totals (「상품수 N개」) count orderable items only.
 - **Known broken PDP: 4873697817 (IZOD 치노 3rd).** Clicking its 장바구니 freezes the page main thread (5/5 repros on both `item-stg` and `item.` domains — CDP goes dead, recover via `Page.navigate`). Sibling items 4873701923 / 4873701452 work fine. Suspected blocked-external-dependency in its click path. Skip it (or try another day / other entry).
-- Useful test goods: gemsell05 IZOD 4873701923 / 4873701452 / 4873697817 (broken PDP); gemsell11 물티슈 4873693605 / 4873693149 / 4823172209 (SOLD OUT); 4856553025 (SOLD OUT) / 4855820722 (test_option, has 색상 option — must select first); gemsell17 4876844082.
+- Useful test goods: **gemsell17 MRT_챗봇_테스트상품 01 `4876842979` / 02 `4876844082` / 04 `4879726658` (15,000원, all in stock — gemsell17's full STG catalog, verified 2026-10-19 via ESM+ `POST item-av.esmplus.com/api/ea/goods/search` as master geminiaidc)**; gemsell01 `4855766038` (test, in stock); gemsell11 물티슈 4873693605 / 4873693149 (in stock) / 4823172209 (SOLD OUT); 4856553025 (SOLD OUT) / 4855820722 (test_option, has 색상 option — must select first). **gemsell05 IZOD 4873701923 / 4873701452 / 4873697817 are delisted as of 2026-10-19 (PDP returns empty title, no cart button).** gemsell17's seller login on STG is blocked by forced password reset (FDS_AUTH_PW_CHG_REQ_GMKT) — use master geminiaidc / Gmkt1004! on the ESM PLUS (first) tab instead.
 
 ## Order (checkout walkthrough — verified end-to-end 2026-10-15/16, lunaliu031, 6 items 175,610원, pno=5537654226)
 
@@ -53,6 +62,25 @@ Shopping operations with a shared test buyer (`lunaliu*` / `gembuyN`) on STG pag
 5. Check the required consent `#xo_id_agreements_providing_personal_info` (필수 개인정보 제3자 제공동의).
 6. **Wait for the user's explicit go**, then click 결제하기 (`button`, exact text). Submit itself does NOT freeze. Success → `checkout-av.gmarket.co.kr/ko/pc/complete?pno=<통합결제번호>` (주문완료 page) showing the virtual account (농협 79033589425703 for pno 5537654226), deposit deadline, and auto-cancel warning.
 7. Verify in MyG 주문내역 (`my-av.gmarket.co.kr/ko/pc/list/all`): the order splits **per seller into sub 주문번호** (e.g. 4504335026~030 for 3 sellers / 6 items), all in 입금대기 (awaiting deposit).
+
+### 2026-10-19 regression: 무통장 now requires a VERIFIED refund account
+
+The STG checkout (both `ko/pc/checkout` and `ko/m/checkout`) now blocks submit until a **환불계좌 (refund account)** is entered AND verified — this did not exist in the 10-15/16 order:
+
+- Fields: `#xo_id_refund_account_bank` (select, e.g. 011=농협), `#xo_id_refund_account_number`, `#xo_id_refund_account_owner_name` (prefilled 루나; must equal the orderer name).
+- Click **계좌확인** → `POST https://checkout-av.gmarket.co.kr/server/ko/pc/api/payment/verifyAccount` body `{"bankCode":"011","accountNo":"…","accountName":"루나"}` → response `data.isValidate` must be `true`. Dummy/format-only numbers return `{"resultCode":"0000",…,"isValidate":false,"message":"INVALID"}` and submission stays blocked.
+- Submit-time validation alerts (in order): 「환불 진행 시 환불받을 은행을 선택해 주세요.」→「선택한 환불은행의 계좌번호를 입력해 주세요.」→「계좌인증 후 주문이 가능합니다. 계좌확인을 진행해 주세요.」→「계좌 정보를 다시 확인해주세요.」. **Without a real (team test) bank account that passes verification, the order cannot be submitted** — 03lunaliu blocked 2026-10-19, user chose not to order. Ask the user for a valid test account.
+
+### Native alert()/confirm() wedges the CDP-driven renderer (root cause of the "freeze" family)
+
+Many "main-thread freeze" symptoms here are actually **native JS dialogs**: while an `alert()`/`confirm()` is open, every `Runtime.evaluate` hangs (looks like a dead renderer) and `Page.handleJavaScriptDialog` may answer `No dialog is showing` (dialog in another frame). Reliable workaround: **override the dialog functions BEFORE clicking** and record the messages:
+
+```js
+window.__alerts=[]; window.alert=m=>{window.__alerts.push(String(m))};
+window.confirm=m=>{window.__alerts.push(String(m)); return true};
+```
+
+Then `el.click()` proceeds, the page stays responsive, and `window.__alerts` reveals the real validation error. Verified on checkout 결제하기 (refund-account prompts) and cart 상품 삭제 (delete confirm) — with the override the cart delete works per line. If a tab is already wedged, `Page.navigate` still recovers it. Cart lines duplicated by repeated AddCartV2/click calls each get their own `qty-…` line; delete extras via 상품 삭제 with confirm overridden.
 
 ### Session expiry mid-checkout
 

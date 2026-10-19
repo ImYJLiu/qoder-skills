@@ -19,7 +19,7 @@ Create a fresh Gmarket buyer account (`gembuyN`) in the **dev** or **prod** envi
 
 - 이름 `루나` | mobile `010-9999-00NN` (NN = serial) | ID 6–10 chars English/numbers — letters-only also passes (`checkIsAlphabetNumericValidation` only rejects non-alphanumerics; the "mixed letters+digits" copy is misleading).
 - Naming per env: **dev = `gembuyN`** (email `gembuyNN@gmail.com`); **prod/STG = serial-prefix `NNlunaliu`** (2-digit serial + lunaliu, e.g. `03lunaliu`; email `NNlunaliu@gmail.com`) — user revised from the suffix style on 2026-10-12; `lunaliu` itself is taken in prod.
-- Serial tracking: dev 39–43 active (39=500000140, 41=500001532, 42=500001535, 43=500001546), 44–46 withdrawn; prod gembuy47 **withdrawn** same day (162342932). 2026-10-12 prefix series: **03lunaliu=162347135 (010-9999-0050), 04lunaliu=162347139 (010-9999-0051)**; legacy suffix pair lunaliu1=162342958 / lunaliu2=162342964 — retirement pending user confirmation. (prod custNo is a 9-digit range — dev numbers don't exist there.)
+- Serial tracking: dev 39–43 active (39=500000140, 41=500001532, 42=500001535, 43=500001546), 44–46 withdrawn, 48=500001554 active (2026-10-19); prod gembuy47 **withdrawn** same day (162342932). 2026-10-12 prefix series: **03lunaliu=162347135 (010-9999-0050), 04lunaliu=162347139 (010-9999-0051)**; legacy suffix pair lunaliu1=162342958 / lunaliu2=162342964 — retirement pending user confirmation. (prod custNo is a 9-digit range — dev numbers don't exist there.)
 
 ## Preconditions
 

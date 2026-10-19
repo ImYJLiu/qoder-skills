@@ -5,6 +5,7 @@ param(
   [string]$EvalStr,
   [string]$AddInitFile,
   [string]$Screenshot,
+  [string]$UrlMatch,
   [int]$TimeoutSec = 90
 )
 $ErrorActionPreference = 'Stop'
@@ -38,7 +39,7 @@ function Send-Cdp([string]$method, $params) {
 $out = $null
 try {
   $targets = Invoke-RestMethod -Uri ("http://127.0.0.1:{0}/json/list" -f $Port) -TimeoutSec 10
-  $page = $targets | Where-Object { $_.type -eq 'page' -and ($_.url -notmatch '^devtools') } | Select-Object -First 1
+  $page = $targets | Where-Object { $_.type -eq 'page' -and ($_.url -notmatch '^devtools') -and (-not $UrlMatch -or $_.url -match $UrlMatch) } | Select-Object -First 1
   if (-not $page) { throw "no page target on port $Port" }
   $script:ws = New-Object System.Net.WebSockets.ClientWebSocket
   $script:cts = New-Object System.Threading.CancellationTokenSource

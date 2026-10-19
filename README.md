@@ -30,4 +30,4 @@
 例：`file-gemini-issue/SKILL.md` → `~/.qoder/skills/file-gemini-issue/SKILL.md`
 
 ---
-Last synced: 2026-10-18
+Last synced: 2026-10-19
