@@ -45,6 +45,16 @@ Shopping operations with a shared test buyer (`lunaliu*` / `gembuyN`) on STG pag
 ## Cart
 
 - From the PDP click 장바구니: `el.click()` on visible `button.btn_mycart`. Success = layer 「장바구니에 상품을 담았습니다」; header badge / cart count +1. Verify by reading the cart page count.
+- **Headless Chrome UA stalls AddCartV2** (STG, 2026-10-21): the add-cart XHR payload carries `request[0][UserAgent]`; when driven by headless CDP Chrome it embeds `HeadlessChrome/155.0.0.0`, and AddCartV2 never responds (no layer, cart count unchanged). Patch the XHR body before clicking — AddCartV2 then returns 200 and the item lands in the cart:
+  ```js
+  const oSend=XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.send=function(b){
+    if(typeof b==='string'&&b.includes('HeadlessChrome')) b=b.replace(/HeadlessChrome/g,'Chrome');
+    return oSend.call(this,b);
+  };
+  document.querySelector('button.btn_mycart').click();
+  ```
+  Repeated clicks still create duplicate `qty-…` cart lines — delete extras with the dialog-freeze workaround below.
 - 품절 items show NO visible cart button (`no visible btn`) — not addable. 판매종료 rows may sit in the cart but render 「판매 종료되어 주문할 수 없습니다」 and are excluded from checkout totals.
 - Old test items may already be in the cart — leave them; only 판매종료/품절 rows are inert. The totals (「상품수 N개」) count orderable items only.
 - **Known broken PDP: 4873697817 (IZOD 치노 3rd).** Clicking its 장바구니 freezes the page main thread (5/5 repros on both `item-stg` and `item.` domains — CDP goes dead, recover via `Page.navigate`). Sibling items 4873701923 / 4873701452 work fine. Suspected blocked-external-dependency in its click path. Skip it (or try another day / other entry).
